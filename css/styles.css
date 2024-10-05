@@ -1,0 +1,64 @@
+/* css/styles.css */
+
+body {
+  background-color: #ccf4f5;
+}
+
+h1,
+h3 {
+  color: #fff;
+  text-shadow: 0 1px 1px #000, 0 5px 10px rgba(0, 0, 0, 0.5);
+}
+
+.btn {
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+}
+
+label {
+  font-weight: 700;
+}
+
+#wordSetSelector {
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+}
+
+#puzzle {
+  font-family: Arial, sans-serif;
+  font-size: 20px;
+  margin-top: 20px;
+}
+
+table {
+  border-collapse: collapse;
+  margin: auto;
+  background-color: #fff;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
+}
+
+td {
+  width: 30px;
+  height: 30px;
+  text-align: center;
+  border: 1px solid #000;
+  cursor: pointer;
+}
+
+td.selected {
+  background-color: rgb(91, 246, 179);
+}
+
+#words {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (max-width: 576px) {
+  #puzzle {
+    font-size: 15px;
+  }
+  td {
+    width: 25px;
+    height: 25px;
+  }
+}

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sopa de Letras</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div class="container-fluid py-4">
+      <div class="row">
+        <div class="col-12 col-md-8 mb-4">
+          <h1 class="text-center text-white">Sopa de Letras</h1>
+          <div id="puzzle" class="d-flex justify-content-center"></div>
+          <div class="text-center mt-3">
+            <div class="w-50 mx-auto">
+              <!-- Clase para ajustar el ancho y centrar -->
+              <select id="wordSetSelector" class="form-select mb-2">
+                <option value="0">Conjunto 1: Hogar</option>
+                <option value="1">Conjunto 2: Animales</option>
+                <option value="2">Conjunto 3: Frutas</option>
+                <option value="3">Conjunto 4: Deportes</option>
+                <option value="4">Conjunto 5: Países</option>
+              </select>
+            </div>
+            <button id="resetButton" class="btn btn-primary">Reiniciar</button>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4 d-flex justify-content-center text-center">
+          <div
+            class="d-flex justify-content-center text-center"
+            id="words"
+          ></div>
+        </div>
+      </div>
+    </div>
+    <script>
+      let selectedCells = [];
+      let currentPuzzle;
+      let currentWords;
+      let currentWordSetIndex = 0;
+
+      const wordSets = [
+        [
+          "MESA",
+          "SILLA",
+          "COCINA",
+          "NEVERA",
+          "ESPEJO",
+          "TELEVISOR",
+          "TELEFONO",
+          "LAVADORA",
+          "MICROONDAS",
+          "MUEBLES",
+        ],
+        [
+          "PERRO",
+          "GATO",
+          "ELEFANTE",
+          "JIRAFA",
+          "LEON",
+          "TIGRE",
+          "MONO",
+          "CEBRA",
+          "KOALA",
+          "PANDA",
+        ],
+        [
+          "MANZANA",
+          "NARANJA",
+          "PLATANO",
+          "UVA",
+          "PERA",
+          "FRESA",
+          "KIWI",
+          "MANGO",
+          "PIÑA",
+          "MELON",
+        ],
+        [
+          "FUTBOL",
+          "TENIS",
+          "BALONCESTO",
+          "NATACION",
+          "ATLETISMO",
+          "CICLISMO",
+          "VOLEIBOL",
+          "GOLF",
+          "RUGBY",
+          "BOXEO",
+        ],
+        [
+          "ESPAÑA",
+          "FRANCIA",
+          "ALEMANIA",
+          "ITALIA",
+          "PORTUGAL",
+          "BELGICA",
+          "HOLANDA",
+          "SUECIA",
+          "NORUEGA",
+          "DINAMARCA",
+        ],
+      ];
+
+      function createPuzzle(words, size) {
+        const puzzle = Array(size)
+          .fill()
+          .map(() => Array(size).fill(""));
+        const usedPositions = new Set();
+
+        function placeWord(word) {
+          const directions = [
+            [0, 1],
+            [1, 0],
+            [1, 1],
+            [0, -1],
+            [-1, 0],
+            [-1, -1],
+            [-1, 1],
+            [1, -1],
+          ];
+
+          for (let attempts = 0; attempts < 50; attempts++) {
+            const direction =
+              directions[Math.floor(Math.random() * directions.length)];
+            const [dx, dy] = direction;
+
+            let x = Math.floor(Math.random() * size);
+            let y = Math.floor(Math.random() * size);
+
+            if (
+              x + dx * (word.length - 1) < 0 ||
+              x + dx * (word.length - 1) >= size ||
+              y + dy * (word.length - 1) < 0 ||
+              y + dy * (word.length - 1) >= size
+            ) {
+              continue;
+            }
+
+            let canPlace = true;
+            for (let i = 0; i < word.length; i++) {
+              const newX = x + dx * i;
+              const newY = y + dy * i;
+              const pos = `${newX},${newY}`;
+              if (usedPositions.has(pos) && puzzle[newY][newX] !== word[i]) {
+                canPlace = false;
+                break;
+              }
+            }
+
+            if (canPlace) {
+              for (let i = 0; i < word.length; i++) {
+                const newX = x + dx * i;
+                const newY = y + dy * i;
+                puzzle[newY][newX] = word[i];
+                usedPositions.add(`${newX},${newY}`);
+              }
+              return true;
+            }
+          }
+          return false;
+        }
+
+        words.forEach((word) => {
+          if (!placeWord(word)) {
+            console.error(`Couldn't place word: ${word}`);
+          }
+        });
+
+        for (let y = 0; y < size; y++) {
+          for (let x = 0; x < size; x++) {
+            if (puzzle[y][x] === "") {
+              puzzle[y][x] = String.fromCharCode(
+                65 + Math.floor(Math.random() * 26)
+              );
+            }
+          }
+        }
+
+        return puzzle;
+      }
+
+      function renderPuzzle(puzzle, words) {
+        const puzzleEl = document.getElementById("puzzle");
+        const wordsEl = document.getElementById("words");
+
+        let tableHTML = "<table>";
+        for (let row of puzzle) {
+          tableHTML += "<tr>";
+          for (let cell of row) {
+            tableHTML += `<td onclick="selectCell(this)">${cell}</td>`;
+          }
+          tableHTML += "</tr>";
+        }
+        tableHTML += "</table>";
+        puzzleEl.innerHTML = tableHTML;
+
+        // Renderizar palabras con checkbox
+        wordsEl.innerHTML =
+          "<h3>Palabras a Encontrar:</h3>" +
+          words
+            .map(
+              (word, index) =>
+                `<p>
+                  
+                  <label id="label-word-${index}">${word}</label>
+                  <input type="checkbox" id="word-${index}" onchange="markWord(${index})">
+                </p>`
+            )
+            .join("");
+      }
+      // Función para cambiar el color de la palabra cuando se marca el checkbox
+      function markWord(index) {
+        const checkbox = document.getElementById(`word-${index}`);
+        const label = document.getElementById(`label-word-${index}`);
+
+        if (checkbox.checked) {
+          label.style.color = "green"; // Cambiar a verde cuando esté marcado
+          label.style.fontWeight = "bold"; // Aumentar el font-weight
+        } else {
+          label.style.color = ""; // Volver al color original si se desmarca
+          label.style.fontWeight = ""; // Volver al peso original
+        }
+
+        // Llamar a la función para verificar si todos los checkboxes están marcados
+        checkCompletion();
+      }
+
+      // Función para verificar si todos los checkboxes están marcados
+      function checkCompletion() {
+        const totalWords = currentWords.length; // El número total de palabras
+        let checkedCount = 0;
+
+        for (let i = 0; i < totalWords; i++) {
+          const checkbox = document.getElementById(`word-${i}`);
+          if (checkbox.checked) {
+            checkedCount++;
+          }
+        }
+
+        // Si todos los checkboxes están marcados, mostrar un mensaje
+        if (checkedCount === totalWords) {
+          alert(
+            "¡Felicitaciones, Ud ha Completado el Sopa de Letras Exitosamente!"
+          );
+        }
+      }
+
+      function selectCell(cell) {
+        cell.classList.toggle("selected");
+        const index = selectedCells.indexOf(cell);
+        if (index > -1) {
+          selectedCells.splice(index, 1);
+        } else {
+          selectedCells.push(cell);
+        }
+      }
+
+      function resetPuzzle() {
+        selectedCells.forEach((cell) => cell.classList.remove("selected"));
+        selectedCells = [];
+        currentWords = wordSets[currentWordSetIndex];
+        currentPuzzle = createPuzzle(currentWords, puzzleSize);
+        renderPuzzle(currentPuzzle, currentWords);
+      }
+
+      function changeWordSet() {
+        currentWordSetIndex = parseInt(
+          document.getElementById("wordSetSelector").value
+        );
+        resetPuzzle();
+      }
+
+      const puzzleSize = 15;
+      currentWords = wordSets[currentWordSetIndex];
+      currentPuzzle = createPuzzle(currentWords, puzzleSize);
+      renderPuzzle(currentPuzzle, currentWords);
+
+      document
+        .getElementById("resetButton")
+        .addEventListener("click", resetPuzzle);
+      document
+        .getElementById("wordSetSelector")
+        .addEventListener("change", changeWordSet);
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
